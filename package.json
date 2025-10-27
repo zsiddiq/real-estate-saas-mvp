@@ -1,0 +1,15 @@
+{
+  "name": "real-estate-saas-mvp",
+  "version": "1.0.0",
+  "description": "Minimal prototype for property ingestion, scoring, and freshness tracking.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
