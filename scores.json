@@ -1,0 +1,14 @@
+[
+  {
+    "corridor": "I-215",
+    "density": 7.5,
+    "score": 800,
+    "timestamp": "2025-10-28T16:39:28.974Z"
+  },
+  {
+    "corridor": "SR-74",
+    "density": 6.2,
+    "score": 670,
+    "timestamp": "2025-10-28T16:39:57.872Z"
+  }
+]
