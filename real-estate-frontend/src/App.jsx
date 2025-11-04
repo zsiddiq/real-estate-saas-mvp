@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
+import { useAuth } from './AuthProvider';
+import AuthUI from './AuthUI';
 import Papa from 'papaparse';
 import './App.css';
 
 function App() {
+  const { user, loading } = useAuth();
   const [properties, setProperties] = useState([]);
   const [minScore, setMinScore] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,6 +26,25 @@ function App() {
 
     fetchProperties();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    async function loadProfile() {
+      const { data, error } = await supabase
+        .from('investor_profiles')
+        .select('min_score, search_term')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data) {
+        setMinScore(data.min_score);
+        setSearchTerm(data.search_term);
+      }
+    }
+
+    loadProfile();
+  }, [user]);
 
   function handleSort(order) {
     const sorted = [...properties].sort((a, b) =>
@@ -52,6 +74,33 @@ function App() {
     document.body.removeChild(link);
   }
 
+  async function handleSaveProfile() {
+    if (!user) {
+      alert('Please log in to save your profile.');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('investor_profiles')
+      .upsert({
+        user_id: user.id,
+        min_score: minScore,
+        search_term: searchTerm,
+      });
+
+    if (error) {
+      console.error('Error saving profile:', error);
+      alert('Failed to save profile.');
+    } else {
+      alert('Profile saved to Supabase!');
+    }
+  }
+
+  function handleResetFilters() {
+    setMinScore(0);
+    setSearchTerm('');
+  }
+
   const averageScore =
     properties.length > 0
       ? Math.round(
@@ -70,8 +119,23 @@ function App() {
         )
     );
 
+  if (loading) {
+    return <div className="loading">Loading dashboard...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="unauthenticated">
+        <AuthUI />
+        <p>Please sign in to view your dashboard.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="App">
+      <AuthUI />
+
       <h1>Scored Properties</h1>
 
       <div className="dashboard-controls">
@@ -95,6 +159,9 @@ function App() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+
+        <button onClick={handleSaveProfile}>Save Profile</button>
+        <button onClick={handleResetFilters}>Reset Filters</button>
       </div>
 
       <div className="summary-stats">

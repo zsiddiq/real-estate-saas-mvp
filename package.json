@@ -1,6 +1,7 @@
 {
   "name": "real-estate-saas-mvp",
   "version": "1.0.0",
+  "type": "module",
   "description": "Minimal prototype for property ingestion, scoring, and freshness tracking.",
   "main": "index.js",
   "scripts": {
@@ -12,6 +13,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.78.0",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "papaparse": "^5.5.3"
   }
 }

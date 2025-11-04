@@ -4,11 +4,19 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
 
-// Optional: log to confirm they're loading correctly
-console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Key:', supabaseKey);
+// Confirm environment variables are loaded
+if (!supabaseUrl || !supabaseKey) {
+  console.warn('Supabase credentials are missing. Check your .env file.');
+}
 
 // Create and export the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Optional: expose auth helpers for reuse
+export const getCurrentUser = async () => {
+  const { data } = await supabase.auth.getUser();
+  return data?.user ?? null;
+};
+
 
 
