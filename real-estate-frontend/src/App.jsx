@@ -10,8 +10,21 @@ function App() {
   const [properties, setProperties] = useState([]);
   const [minScore, setMinScore] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sessionChecked, setSessionChecked] = useState(false);
+
+  // Ensure session is loaded after redirect
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        console.log('Session loaded:', session);
+      }
+      setSessionChecked(true);
+    });
+  }, []);
 
   useEffect(() => {
+    if (!user) return;
+
     async function fetchProperties() {
       const { data, error } = await supabase
         .from('properties')
@@ -25,7 +38,7 @@ function App() {
     }
 
     fetchProperties();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -119,7 +132,7 @@ function App() {
         )
     );
 
-  if (loading) {
+  if (!sessionChecked || loading) {
     return <div className="loading">Loading dashboard...</div>;
   }
 
