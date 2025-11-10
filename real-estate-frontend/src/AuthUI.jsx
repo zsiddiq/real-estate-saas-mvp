@@ -5,14 +5,12 @@ function AuthUI() {
   const { user } = useAuth();
 
   async function signIn() {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: 'https://5173-zsiddiq-real-estate-saas-mvp.github.dev'
-,
-      },
-    });
-  }
+  await supabase.auth.signInWithOAuth({
+  provider: 'google',
+});
+
+
+}
 
   async function signOut() {
     await supabase.auth.signOut();

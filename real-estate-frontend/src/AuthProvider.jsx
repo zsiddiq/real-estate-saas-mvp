@@ -8,13 +8,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    // Get session on initial load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
       setLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    // Listen for auth state changes
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        setUser(session?.user || null);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
     });
 
     return () => {
