@@ -1,5 +1,7 @@
 // scoring.js
 
+import { scoreParcel } from './scoring/scoreParcel.js';
+
 export function scoreProperty(property, rules) {
   let score = 0;
   let reasons = [];
@@ -45,7 +47,6 @@ export function scoreProperty(property, rules) {
   };
 }
 
-// Optional: keep your corridor scoring function too
 export function scoreCorridor(corridorId, densityFactor) {
   const weight = 10;
   const score = densityFactor * weight;
@@ -54,4 +55,9 @@ export function scoreCorridor(corridorId, densityFactor) {
     densityFactor,
     score
   };
+}
+
+// ATTOM-specific scoring
+export function scoreAttomParcel(parcel, options = { view: 'investor' }) {
+  return scoreParcel(parcel, options);
 }

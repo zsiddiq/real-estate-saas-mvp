@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
+import { scoreParcel } from './scoring/scoreParcel.js'; // ✅ Import scoring logic
 
 const ATTOM_API_KEY = process.env.ATTOM_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -24,6 +25,25 @@ async function ingestProperty(address) {
       return;
     }
 
+    // 🧠 Map ATTOM payload to scoring schema
+    const parcel = {
+      foreclosureStatus: p.foreclosure?.status,
+      equityPercent: p.mortgage?.equityPercent || 100,
+      pavedRoad: p.site?.pavedRoad === 'Yes',
+      citySewage: p.site?.sewerType === 'Municipal',
+      municipalWater: p.site?.waterSource === 'Municipal',
+      zoning: p.zoning?.zoning || 'unknown',
+      slope: p.site?.topography === 'Level' ? 'flat' : 'steep',
+      access: p.site?.accessType === 'Public Road' ? 'good' : 'poor',
+      distanceToAnchor: 0.8, // 🔧 Placeholder — replace with real proximity logic
+      inModernizationCorridor: true, // 🔧 Placeholder — replace with corridor overlay logic
+      rentGrowth: 6, // 🔧 Placeholder — replace with market data
+      vacancyRate: 8, // 🔧 Placeholder — replace with market data
+    };
+
+    const score = scoreParcel(parcel, { view: 'investor' });
+    console.log(`📊 Scored ${address}: ${score}`);
+
     const parsed = {
       address: p.address?.line1,
       city: p.address?.locality,
@@ -35,6 +55,7 @@ async function ingestProperty(address) {
       year_built: p.building?.summary?.yearBuilt,
       last_updated: new Date().toISOString(),
       source: 'ATTOM',
+      score,
       raw_json: data
     };
 
@@ -49,7 +70,6 @@ async function ingestProperty(address) {
   }
 }
 
-// ✅ Correct usage: full address string
+// ✅ Run with a real address
 ingestProperty('100 Universal City Plaza, Universal City, CA 91608');
-
 
