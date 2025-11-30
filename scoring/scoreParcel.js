@@ -1,8 +1,31 @@
-// scoring/scoreParcel.js - FINAL CORRECTED VERSION
+// scoring/scoreParcel.js - FINAL VERSION WITH DYNAMIC FRESHNESS
+
+// Helper function to calculate freshness score (0-100)
+// Score decreases gradually the older the data is.
+function calculateFreshnessScore(ingestedDate) {
+    if (!ingestedDate) return 0;
+
+    const today = new Date();
+    const ingest = new Date(ingestedDate);
+    const diffTime = Math.abs(today.getTime() - ingest.getTime());
+    
+    // Calculate difference in days, rounded up
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+    // Define the period after which the score drops to 0 (e.g., 300 days is about 10 months)
+    const maxDays = 300; 
+    const scoreDropPerDay = 100 / maxDays;
+
+    // Calculate score: 100 minus the total drop based on time passed
+    let score = 100 - (diffDays * scoreDropPerDay);
+    
+    // Ensure the score is between 0 and 100
+    return Math.max(0, Math.round(score));
+}
+
 
 export function scoreParcel(parcel, options = { view: 'investor' }) {
     // 🛑 ULTIMATE FIX: Create a guaranteed-safe object from the input.
-    // If 'parcel' is undefined/null, the default will be an empty object, preventing the crash.
     const safeParcel = parcel || {};
     
     // 1. DEFINE WEIGHTS AND BUCKETS
@@ -29,7 +52,6 @@ export function scoreParcel(parcel, options = { view: 'investor' }) {
     let confidenceDelta = 0;  
 
     // 2. CALCULATE INVESTMENT SUITABILITY SCORE
-    // All subsequent uses of 'parcel' must now be 'safeParcel'
     if (safeParcel.foreclosureStatus === 'active') investmentScore += weights.suitability.distress.foreclosure;
     if (safeParcel.equityPercent < 20) investmentScore += weights.suitability.distress.equityGap;
 
@@ -44,7 +66,6 @@ export function scoreParcel(parcel, options = { view: 'investor' }) {
     if (safeParcel.distanceToAnchor < 1) investmentScore += weights.overlay.nearAnchor;
     if (safeParcel.inModernizationCorridor) investmentScore += weights.overlay.inCorridor;
 
-    // These lines were the crash point: now safely accessing properties on 'safeParcel'
     if ((safeParcel.rentGrowth ?? 0) > 5) investmentScore += weights.suitability.market.rentGrowth;
     if ((safeParcel.vacancyRate ?? 0) > 10) investmentScore += weights.suitability.market.highVacancy;
    
@@ -65,6 +86,6 @@ export function scoreParcel(parcel, options = { view: 'investor' }) {
     return {
       totalScore: Math.max(0, Math.min(investmentScore, 100)),
       confidenceScore: finalConfidenceScore, 
-      freshnessScore: 90, 
+      freshnessScore: calculateFreshnessScore(safeParcel.ingestedAt), // <-- DYNAMIC CALCULATION
     };
 }

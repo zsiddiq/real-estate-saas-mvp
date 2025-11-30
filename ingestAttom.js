@@ -32,6 +32,9 @@ async function ingestProperty(address) {
         return;
     }
 
+    // Define the ingestion timestamp before use
+    const ingestionTimestamp = new Date().toISOString(); // <-- DEFINED HERE
+    
     // 🧠 Map ATTOM payload to scoring schema
     const parcel = {
       foreclosureStatus: p.foreclosure?.status,
@@ -46,6 +49,7 @@ async function ingestProperty(address) {
       inModernizationCorridor: true, // 🔧 Placeholder
       rentGrowth: 6, // 🔧 Placeholder
       vacancyRate: 8, // 🔧 Placeholder
+      ingestedAt: ingestionTimestamp, // <-- PASSED TO SCORING FUNCTION
     };
 
     const score = scoreParcel(parcel, { view: 'investor' });
@@ -72,11 +76,12 @@ async function ingestProperty(address) {
         zoning_code: p.zoning?.zoning, // Added from 'parcel' logic to schema
         
         // ✅ Re-enable score mapping
+        total_score: score.totalScore, 
         freshness_score: score.freshnessScore, 
         confidence_score: score.confidenceScore,
         
         source: 'ATTOM', // Fix from previous step
-        ingested_at: new Date().toISOString(),
+        ingested_at: ingestionTimestamp, // <-- USE THE DEFINED VARIABLE
         raw_json: data
     };
 
