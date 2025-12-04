@@ -1,7 +1,8 @@
-// src/PropertySearch.tsx - COMPLETE LOGIC
+// frontend/src/PropertySearch.tsx - COMPLETE LOGIC WITH MAP INTEGRATION & DEBUG LOG
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios'; // We will install axios next
+import axios from 'axios';
+import PropertyMap from './PropertyMap'; 
 
 // Interface for the data coming back from the Edge Function
 interface Property {
@@ -16,10 +17,13 @@ interface Property {
   bath_count: number;
   square_footage: number;
   year_built: number;
+  lat?: number;
+  lng?: number;
 }
 
 const API_ENDPOINT = 'https://nxbmoohozcsvglqsaujm.supabase.co/functions/v1/search-properties';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54Ym1vb2hvemNzdmdscXNhdWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NjEzNDAsImV4cCI6MjA3NzMzNzM0MH0.5HKg3umeAR02xbTSfCi7Ye0wvVMWrD_z7RRH7817h0c'; // <-- 🛑 REPLACE WITH YOUR ACTUAL KEY!
+// 🛑 IMPORTANT: KEEP YOUR ACTUAL KEY HERE. 
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54Ym1vb2hvemNzdmdscXNhdWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NjEzNDAsImV4cCI6MjA3NzMzNzM0MH0.5HKg3umeAR02xbTSfCi7Ye0wvVMWrD_z7RRH7817h0c'; 
 
 const PropertySearch: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -49,7 +53,11 @@ const PropertySearch: React.FC = () => {
       );
       
       // The Edge Function returns data inside a 'data' property
-      setResults(response.data.data || []); 
+      
+      // 🚨 DEBUGGING LINE: CHECK THE DATA STRUCTURE!
+      console.log('API Response Data for Debug:', response.data.data); 
+      
+      setResults(response.data.data as Property[] || []); 
 
     } catch (err) {
       console.error(err);
@@ -61,7 +69,6 @@ const PropertySearch: React.FC = () => {
 
   // Fetch results when the component loads and when search criteria change
   useEffect(() => {
-    // Only run search if query or minConfidence changes
     const timeoutId = setTimeout(() => {
         fetchProperties();
     }, 500); // Debounce to prevent immediate API calls on every keystroke
@@ -99,7 +106,9 @@ const PropertySearch: React.FC = () => {
       {loading && <p className="text-blue-600 font-semibold">Loading properties...</p>}
       {error && <p className="text-red-600 font-bold">{error}</p>}
 
-      <div className="space-y-4">
+      <PropertyMap properties={results} />
+      
+      <div className="space-y-4 mt-8"> 
         {results.length === 0 && !loading && !error && (
             <p className="text-gray-500">No properties found matching your criteria. Try changing the confidence score.</p>
         )}
@@ -108,11 +117,11 @@ const PropertySearch: React.FC = () => {
           <div key={prop.apn} className="p-4 border border-gray-200 rounded-lg shadow hover:shadow-lg transition duration-150 ease-in-out bg-white">
             <h2 className="text-xl font-semibold text-blue-700">{prop.address_full}, {prop.city}</h2>
             <p className="mt-2 text-sm text-gray-600">
-                **Investment Score:** <span className="font-bold text-green-600">{prop.total_score}</span> | 
+                **Investment Score:** <span className="font-bold text-green-600">{prop.total_score || 'N/A'}</span> | 
                 **Confidence:** {prop.confidence_score}% | 
-                **Beds/Baths:** {prop.bed_count}/{prop.bath_count} |
-                **Sq. Ft.:** {prop.square_footage} |
-                **Year Built:** {prop.year_built}
+                **Beds/Baths:** {prop.bed_count || 'N/A'}/{prop.bath_count || 'N/A'} |
+                **Sq. Ft.:** {prop.square_footage || 'N/A'} |
+                **Year Built:** {prop.year_built || 'N/A'}
             </p>
           </div>
         ))}
